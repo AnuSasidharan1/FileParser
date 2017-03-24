@@ -3,6 +3,7 @@ package com.utility;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -21,6 +22,7 @@ public class Main {
     private String wrapBegLine = "";
     private String wrapEndLine = "";
 
+    /*
     public static void main(String args[]) {
 
         String fileName = "Action.c";
@@ -37,7 +39,7 @@ public class Main {
 
         app.scanFile(fileName);
 
-    }
+    }*/
 
     public String getWrapLine() {
         return wrapLine;
@@ -79,7 +81,7 @@ public class Main {
         this.wrapEndLine = wrapEndLine;
     }
 
-    private void scanFile(String fileName){
+    public boolean scanFile(String fileName, String outputFileName){
         try (Scanner scanner = new Scanner(new File(fileName))) {
             StringBuilder line = new StringBuilder();
             String begCommParamStr = "";
@@ -89,9 +91,11 @@ public class Main {
                 line.append(scanner.nextLine());
                 if(isValidcommand(line)) {
                     if(isWrapBegParCommand(line.toString())){
-                        begCommParamStr = findArg(line.toString());;
+                        begCommParamStr = findArg(line.toString());
+                        lines.add(line.toString());
                     } else if(isWrapEndParCommand(line.toString())) {
                         endCommParamStr = findArg(line.toString());
+                        lines.add(line.toString());
                     } else if(isWrapperCommand(line.toString())){
                         //Wrapper command Found
                         lines.add(wrapBegLine + "(" + begCommParamStr +")");
@@ -106,11 +110,16 @@ public class Main {
                 }
             }
 
-            writeToTheFile("out.c",lines);
+            if(writeToTheFile(outputFileName,lines) != null){
+                return true;
+            } else {
+                return false;
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     private boolean isWrapBegParCommand(String command){
@@ -147,11 +156,12 @@ public class Main {
         return method.substring(method.indexOf("(")+1 ,method.indexOf(")"));
     }
 
-    public void writeToTheFile(String fileName, List<String> contents){
+    public Path writeToTheFile(String fileName, List<String> contents){
         try {
-            Files.write(Paths.get(fileName), contents);
+            return Files.write(Paths.get(fileName), contents);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 }
